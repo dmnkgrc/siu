@@ -1,4 +1,24 @@
-use std::{collections::BTreeMap, env, fs, path::Path};
+use std::{env, fs, path::Path};
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+enum Tool {
+    Homebrew,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+struct Step {
+    description: String,
+    tool: Option<Tool>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct Project {
+    name: String,
+    description: String,
+    steps: Vec<Step>,
+}
 
 fn get_projects_path() -> String {
     match home::home_dir() {
@@ -19,12 +39,12 @@ pub fn init() {
     }
 }
 
-pub fn get(name: &String) -> Result<BTreeMap<String, String>, Box<dyn std::error::Error>> {
+pub fn get(name: &String) -> Result<Project, Box<dyn std::error::Error>> {
     let projects_path = get_projects_path();
     let mut path = Path::new(&projects_path).join(name);
     path.set_extension("yaml");
     let file = std::fs::File::open(path)?;
-    let result: BTreeMap<String, String> = serde_yaml::from_reader(file)?;
+    let result: Project = serde_yaml::from_reader(file)?;
     println!("Result: {:?}", result);
     Ok(result)
 }
