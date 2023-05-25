@@ -27,12 +27,12 @@ pub fn run() {
     match matches.subcommand() {
         Some(("setup", sub_matches)) => {
             let project_name = sub_matches.get_one::<String>("PROJECT").expect("Required");
-            println!(
-                "Setting up project: {}",
-                sub_matches.get_one::<String>("PROJECT").expect("Required")
-            );
             let project = projects::get(project_name).expect("Not found");
-            println!("Project found: {:?}", project);
+            let result = projects::setup(&project);
+            match result {
+                Ok(_) => println!("Finished setting up project! ✅"),
+                Err(e) => println!("Error setting up project: {e:?}"),
+            }
         }
         Some((ext, sub_matches)) => {
             let args = sub_matches

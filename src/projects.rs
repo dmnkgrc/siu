@@ -45,6 +45,16 @@ pub fn get(name: &String) -> Result<Project, Box<dyn std::error::Error>> {
     path.set_extension("yaml");
     let file = std::fs::File::open(path)?;
     let result: Project = serde_yaml::from_reader(file)?;
-    println!("Result: {:?}", result);
     Ok(result)
+}
+
+pub fn setup(project: &Project) -> Result<(), &'static str> {
+    println!("\n\nSetting up project: {}\n\n", project.name);
+    println!("{}\n\n", project.description);
+    (project.steps.iter().enumerate())
+        .into_iter()
+        .for_each(|(i, step)| {
+            println!("{}: {}\n", i + 1, step.description);
+        });
+    Ok(())
 }
