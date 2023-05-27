@@ -22,11 +22,8 @@ pub struct Project {
 
 fn get_projects_path() -> String {
     match home::home_dir() {
-        Some(path) => {
-            return env::var("SMU_PROJECTS_PATH").unwrap_or_else(|_| {
-                String::from(path.to_string_lossy().to_string() + "/.smu/projects")
-            });
-        }
+        Some(path) => env::var("SMU_PROJECTS_PATH")
+            .unwrap_or_else(|_| path.to_string_lossy().to_string() + "/.smu/projects"),
         None => panic!("Home directory not found, please set the SMU_PROJECTS_PATH env variable"),
     }
 }
@@ -51,10 +48,8 @@ pub fn get(name: &String) -> Result<Project, Box<dyn std::error::Error>> {
 pub fn setup(project: &Project) -> Result<(), &'static str> {
     println!("\n\nSetting up project: {}\n\n", project.name);
     println!("{}\n\n", project.description);
-    (project.steps.iter().enumerate())
-        .into_iter()
-        .for_each(|(i, step)| {
-            println!("{}: {}\n", i + 1, step.description);
-        });
+    (project.steps.iter().enumerate()).for_each(|(i, step)| {
+        println!("{}: {}\n", i + 1, step.description);
+    });
     Ok(())
 }
