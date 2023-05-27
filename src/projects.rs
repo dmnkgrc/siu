@@ -3,13 +3,13 @@ use std::{env, fs, path::Path};
 use serde::{Deserialize, Serialize};
 
 use crate::tools::homebrew;
+use crate::tools::node;
 use crate::tools::tool::Tool;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 enum SupportedTool {
     Homebrew,
-    Npm,
-    Yarn,
+    Node,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -51,17 +51,18 @@ pub fn get(name: &String) -> Result<Project, Box<dyn std::error::Error>> {
 }
 
 pub fn setup(project: &Project) -> Result<(), &'static str> {
-    println!("\n\nSetting up project: {}\n\n", project.name);
+    println!("\n\nSetting up project: {}\n", project.name);
     println!("{}\n", project.description);
     (project.steps.iter().enumerate()).for_each(|(i, step)| {
-        println!("{}: {}\n", i + 1, step.description);
+        println!("\n{}: {}\n", i + 1, step.description);
         match step.tool {
             Some(SupportedTool::Homebrew) => {
                 let brew = homebrew::Homebrew {};
                 brew.install().expect("Failed to install Homebrew");
             }
-            Some(_) => {
-                unimplemented!();
+            Some(SupportedTool::Node) => {
+                let node = node::Node {};
+                node.install().expect("Failed to install Node");
             }
             None => {
                 unimplemented!();
