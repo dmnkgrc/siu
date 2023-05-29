@@ -13,6 +13,10 @@ use std::{
 pub struct Node {}
 
 impl Tool for Node {
+    fn name(&self) -> &'static str {
+        "Node"
+    }
+
     fn install(&self) -> Result<(), &'static str> {
         let is_installed =
             is_already_installed("node").expect("Failed to check if tool is installed");

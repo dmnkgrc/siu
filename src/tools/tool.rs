@@ -1,6 +1,7 @@
 use std::process::Command;
 
 pub trait Tool {
+    fn name(&self) -> &'static str;
     fn install(&self) -> Result<(), &'static str>;
 }
 
