@@ -14,6 +14,18 @@ impl Tool for Homebrew {
             return Ok(());
         }
 
+        let output = Command::new("/bin/bash")
+            .args(["-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""])
+            .output()
+            .expect("Failed to install Homebrew");
+
+        if !output.status.success() {
+            panic!(
+                "{}",
+                String::from_utf8(output.stderr).expect("got non UTF-8 data from stdout")
+            )
+        }
+
         Ok(())
     }
 }
