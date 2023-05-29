@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use super::tool::{is_already_installed, Tool};
 
@@ -16,6 +16,7 @@ impl Tool for Homebrew {
 
         let output = Command::new("/bin/bash")
             .args(["-c", "\"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""])
+            .stdout(Stdio::inherit())
             .output()
             .expect("Failed to install Homebrew");
 
@@ -33,8 +34,10 @@ impl Tool for Homebrew {
 pub fn install_package(name: &str) -> Result<(), &'static str> {
     let mut error_msg = "Failed to install package ".to_owned();
     error_msg.push_str(name);
+    println!("Will install {} with Homebrew", name);
     let output = Command::new("brew")
         .args(["install", name])
+        .stdout(Stdio::inherit())
         .output()
         .expect(&error_msg);
 

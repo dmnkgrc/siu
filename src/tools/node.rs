@@ -35,7 +35,7 @@ impl Tool for Node {
         homebrew::install_package("fnm")?;
 
         println!("Finished installing Fnm");
-        println!("Will add necessarry env variables to shell config");
+        println!("Will add necessary env variables to shell config");
 
         let env_output = Command::new("fnm")
             .arg("env")
