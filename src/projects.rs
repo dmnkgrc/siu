@@ -1,28 +1,37 @@
 use std::{env, fs, path::Path};
 
+use ratatui::widgets::ListItem;
 use serde::{Deserialize, Serialize};
+use walkdir::DirEntry;
+use walkdir::WalkDir;
 
 use crate::tools::homebrew;
 use crate::tools::node;
 use crate::tools::tool::Tool;
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-enum SupportedTool {
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum SupportedTool {
     Homebrew,
     Node,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
-struct Step {
-    description: String,
-    tool: Option<SupportedTool>,
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub struct Step {
+    pub description: String,
+    pub tool: Option<SupportedTool>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Project {
-    name: String,
-    description: String,
-    steps: Vec<Step>,
+    pub name: String,
+    pub description: String,
+    pub steps: Vec<Step>,
+}
+
+impl<'a> From<Project> for ListItem<'a> {
+    fn from(value: Project) -> Self {
+        ListItem::new(value.name)
+    }
 }
 
 fn get_projects_path() -> String {
@@ -53,14 +62,49 @@ fn parse_project_file(project_file: &fs::File) -> Result<Project, String> {
     }
 }
 
-pub fn get(name: &String) -> Result<Project, String> {
-    let projects_path = get_projects_path();
-    let mut path = Path::new(&projects_path).join(name);
-    path.set_extension("yaml");
+fn parse_project_file_from_path(path: &Path) -> Result<Project, String> {
     match fs::File::open(path) {
         Ok(file) => parse_project_file(&file),
         Err(e) => Err(format!("Failed to open project file: {}", e)),
     }
+}
+
+fn is_yaml(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.ends_with(".yaml") || s.ends_with(".yml"))
+        .unwrap_or(false)
+}
+
+pub fn get_all() -> Result<Vec<Project>, String> {
+    let projects_path = get_projects_path();
+    let mut projects: Vec<Project> = Vec::new();
+
+    let mut walker = WalkDir::new(projects_path).into_iter();
+    loop {
+        let entry = match walker.next() {
+            None => break,
+            Some(Err(e)) => return Err(format!("Failed to walk projects directory: {}", e)),
+            Some(Ok(entry)) => entry,
+        };
+        if !is_yaml(&entry) {
+            continue;
+        }
+        match parse_project_file_from_path(entry.path()) {
+            Ok(p) => projects.push(p),
+            Err(e) => return Err(e),
+        }
+    }
+
+    Ok(projects)
+}
+
+pub fn get(name: &String) -> Result<Project, String> {
+    let projects_path = get_projects_path();
+    let mut path_buf = Path::new(&projects_path).join(name);
+    path_buf.set_extension("yaml");
+    parse_project_file_from_path(path_buf.as_path())
 }
 
 fn install_tool(tool: &dyn Tool) -> Result<(), String> {
