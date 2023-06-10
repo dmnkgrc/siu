@@ -37,10 +37,10 @@ pub fn ui(frame: &mut Frame<CrosstermBackend<Stdout>>, app: &mut CliApp) {
         .collect();
     let list = List::new(items)
         .block(block)
-        .style(Style::default().fg(Color::White))
+        .style(Style::default())
         .highlight_style(
             Style::default()
-                .fg(Color::Blue)
+                .fg(Color::LightRed)
                 .add_modifier(Modifier::BOLD),
         )
         .highlight_symbol(">> ");

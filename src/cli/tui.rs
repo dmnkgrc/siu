@@ -29,9 +29,13 @@ pub struct ProjectList {
 
 impl ProjectList {
     fn new(items: Vec<Project>) -> Self {
+        let mut state = ListState::default();
+        if !items.is_empty() {
+            state.select(Some(0));
+        }
         ProjectList {
-            state: ListState::default(),
             mode: Mode::Normal,
+            state,
             items,
         }
     }
