@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     io::{self, Stdout},
+    process::Child,
     time::{Duration, Instant},
 };
 
@@ -79,18 +80,58 @@ impl ProjectList {
     }
 }
 
+#[derive(Debug)]
+pub enum StepCommandState {
+    Default,
+    Running,
+    Completed,
+}
+
+#[derive(Debug)]
+pub struct StepSetupState {
+    pub current_command_state: StepCommandState,
+    pub current_command: usize,
+    pub current_command_process: Option<Child>,
+}
+
+#[derive(Debug)]
+pub struct ProjectSetup {
+    pub project: Project,
+    pub steps: Vec<StepSetupState>,
+    pub current_step: usize,
+}
+
 /// This struct holds the current state of the app. In particular, it has the `items` field which is
 /// a wrapper around `ListState`. Keeping track of the items state let us render the associated
 /// widget with its state and have access to features such as natural scrolling.
 pub struct CliApp {
     pub items: ProjectList,
+    pub current_project: Option<ProjectSetup>,
 }
 
 impl CliApp {
     pub fn new() -> Self {
         CliApp {
-            items: ProjectList::new(projects::get_all().unwrap()),
+            items: ProjectList::new(projects::get_all().expect("Failed to load projects")),
+            current_project: None,
         }
+    }
+
+    pub fn setup_project(&mut self, project: Project) {
+        let mut steps: Vec<StepSetupState> = Vec::new();
+        for _ in project.clone().steps {
+            let step_setup = StepSetupState {
+                current_command_state: StepCommandState::Default,
+                current_command: 0,
+                current_command_process: None,
+            };
+            steps.push(step_setup);
+        }
+        self.current_project = Some(ProjectSetup {
+            project,
+            steps,
+            current_step: 0,
+        })
     }
 }
 
@@ -106,7 +147,7 @@ pub fn setup_terminal() -> Result<Terminal<CrosstermBackend<Stdout>>, Box<dyn Er
     let terminal = Terminal::with_options(
         CrosstermBackend::new(stdout),
         TerminalOptions {
-            viewport: Viewport::Inline(16),
+            viewport: Viewport::Inline(32),
         },
     )?;
     Ok(terminal)
@@ -120,7 +161,11 @@ pub fn restore_terminal() -> Result<(), Box<dyn Error>> {
 fn ui(frame: &mut Frame<CrosstermBackend<Stdout>>, app: &mut CliApp) {
     match app.items.mode {
         Mode::Normal => normal::ui(frame, app),
-        Mode::SettingUp => setting_up::ui(frame, app),
+        Mode::SettingUp => {
+            if let Some(project_setup) = app.current_project.as_mut() {
+                setting_up::ui(frame, project_setup)
+            }
+        }
     }
 }
 
@@ -147,7 +192,8 @@ pub fn run_app(
                         KeyCode::Char('k') => app.items.previous(),
                         KeyCode::Up => app.items.previous(),
                         KeyCode::Enter => {
-                            if app.items.state.selected().is_some() {
+                            if let Some(project) = app.items.get_selected() {
+                                app.setup_project(project.clone());
                                 app.items.mode = Mode::SettingUp;
                             }
                         }

@@ -1,3 +1,4 @@
+use std::process::{Child, Command, Stdio};
 use std::{env, fs, path::Path};
 
 use ratatui::widgets::ListItem;
@@ -5,20 +6,29 @@ use serde::{Deserialize, Serialize};
 use walkdir::DirEntry;
 use walkdir::WalkDir;
 
-use crate::tools::homebrew;
-use crate::tools::node;
-use crate::tools::tool::Tool;
-
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub enum SupportedTool {
-    Homebrew,
-    Node,
+pub struct RunTool {
+    brew: Option<String>,
+}
+
+impl RunTool {
+    pub fn get_install_cmd(self) -> Child {
+        if let Some(brew) = self.brew {
+            let brew_arg = brew.as_str();
+            return Command::new("brew")
+                .args(["install", brew_arg])
+                .stdout(Stdio::null())
+                .spawn()
+                .unwrap();
+        };
+        unreachable!();
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Step {
     pub description: String,
-    pub tool: Option<SupportedTool>,
+    pub run: Vec<RunTool>,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
@@ -107,34 +117,34 @@ pub fn get(name: &String) -> Result<Project, String> {
     parse_project_file_from_path(path_buf.as_path())
 }
 
-fn install_tool(tool: &dyn Tool) -> Result<(), String> {
-    match tool.install() {
-        Ok(_) => Ok(()),
-        Err(e) => Err(format!("Failed to install tool {}: {}", tool.name(), e)),
-    }
-}
+// fn install_tool(tool: &dyn Tool) -> Result<(), String> {
+//     match tool.install() {
+//         Ok(_) => Ok(()),
+//         Err(e) => Err(format!("Failed to install tool {}: {}", tool.name(), e)),
+//     }
+// }
 
-fn setup_step(step: &Step) -> Result<(), String> {
-    match step.tool {
-        Some(SupportedTool::Homebrew) => install_tool(&homebrew::Homebrew {}),
-        Some(SupportedTool::Node) => install_tool(&node::Node {}),
-        None => {
-            unimplemented!();
-        }
-    }
-}
-
-pub fn setup(project: &Project) -> Result<(), String> {
-    println!("\n\nSetting up project: {}\n", project.name);
-    println!("{}\n", project.description);
-    (project.steps.iter().enumerate()).for_each(|(i, step)| {
-        println!("\n{}: {}\n", i + 1, step.description);
-        match setup_step(step) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("Failed to setup step {}: {}", i + 1, e)
-            }
-        }
-    });
-    Ok(())
-}
+// fn setup_step(step: &Step) -> Result<(), String> {
+//     match step.tool {
+//         Some(SupportedTool::Homebrew) => install_tool(&homebrew::Homebrew {}),
+//         Some(SupportedTool::Node) => install_tool(&node::Node {}),
+//         None => {
+//             unimplemented!();
+//         }
+//     }
+// }
+//
+// pub fn setup(project: &Project) -> Result<(), String> {
+//     println!("\n\nSetting up project: {}\n", project.name);
+//     println!("{}\n", project.description);
+//     (project.steps.iter().enumerate()).for_each(|(i, step)| {
+//         println!("\n{}: {}\n", i + 1, step.description);
+//         match setup_step(step) {
+//             Ok(_) => {}
+//             Err(e) => {
+//                 panic!("Failed to setup step {}: {}", i + 1, e)
+//             }
+//         }
+//     });
+//     Ok(())
+// }
