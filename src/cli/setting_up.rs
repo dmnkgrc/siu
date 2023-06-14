@@ -1,4 +1,4 @@
-use std::io::Stdout;
+use std::io::{Read, Stdout};
 
 use ratatui::{
     backend::CrosstermBackend,
@@ -40,47 +40,44 @@ pub fn ui(frame: &mut Frame<CrosstermBackend<Stdout>>, project_setup: &mut Proje
         .unwrap();
     match current_step_setup.current_command_state {
         StepCommandState::Default => {
-            let mut cmd = current_cmd.get_install_cmd();
-            // let stdout = cmd.stdout.take().unwrap();
-            cmd.wait().unwrap();
-            let paragraph = Paragraph::new("Command finished 2").block(block.to_owned());
-            frame.render_widget(paragraph, chunks[0]);
+            let cmd = current_cmd.get_install_cmd();
 
-            // project_setup.steps[current_step_index].current_command_process =
-            //     Some(current_cmd.get_install_cmd());
+            project_setup.steps[current_step_index].current_command_process = Some(cmd);
             project_setup.steps[current_step_index].current_command_state =
                 StepCommandState::Running;
         }
         StepCommandState::Running => {
-            // if let Some(cmd) = current_step_setup.current_command_process.as_mut() {
-            //     let out = cmd.wait_with_output().unwrap();
-            //     //     match cmd.try_wait() {
-            //     //         Ok(Some(_)) => {
-            let paragraph = Paragraph::new("Command finished").block(block.to_owned());
-            frame.render_widget(paragraph, chunks[0]);
-            //     //         }
-            //     //         Ok(None) => {
-            //     //             let paragraph = Paragraph::new("Command running").block(block);
-            //     //             frame.render_widget(paragraph, chunks[0]);
-            //     //         }
-            //     //         Err(_) => unimplemented!(),
-            //     //     }
-            // }
+            if let Some(cmd) = current_step_setup.current_command_process.as_mut() {
+                match cmd.try_wait() {
+                    Ok(Some(_)) => {
+                        let output = project_setup.append_to_output("");
+                        let paragraph = Paragraph::new(output).block(block.to_owned());
+                        frame.render_widget(paragraph, chunks[0]);
+                    }
+                    Ok(None) => {
+                        let mut out = String::new();
+                        cmd.stderr
+                            .take()
+                            .expect("Failed to get stderr")
+                            .read_to_string(&mut out)
+                            .expect("Failed to read stderr");
+                        cmd.stdout
+                            .take()
+                            .expect("Failed to get stdout")
+                            .read_to_string(&mut out)
+                            .expect("Failed to read stdout");
+                        let output = project_setup.append_to_output(&out);
+                        let paragraph = Paragraph::new(output).block(block.to_owned());
+
+                        frame.render_widget(paragraph, chunks[0]);
+                    }
+                    Err(_) => unimplemented!(),
+                }
+            }
         }
         StepCommandState::Completed => {
             project_setup.current_step += 1;
         }
     }
-    frame.render_widget(block, chunks[0]);
     frame.render_widget(footer, chunks[1]);
-
-    // if let Some(out) = cmd.stdout.as_mut() {
-    //     let mut buffer = String::new();
-    //     out.read_to_string(&mut buffer)
-    //         .expect("Failed to read stdout");
-    //
-    //     let p = Paragraph::new(buffer).block(block);
-    //
-    //     frame.render_widget(p, chunks[0]);
-    // }
 }

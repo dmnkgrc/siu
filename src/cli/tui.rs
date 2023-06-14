@@ -99,6 +99,14 @@ pub struct ProjectSetup {
     pub project: Project,
     pub steps: Vec<StepSetupState>,
     pub current_step: usize,
+    pub output: String,
+}
+
+impl ProjectSetup {
+    pub fn append_to_output(&mut self, output: &str) -> String {
+        self.output.push_str(output);
+        self.output.to_owned()
+    }
 }
 
 /// This struct holds the current state of the app. In particular, it has the `items` field which is
@@ -131,6 +139,7 @@ impl CliApp {
             project,
             steps,
             current_step: 0,
+            output: String::new(),
         })
     }
 }

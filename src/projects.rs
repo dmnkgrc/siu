@@ -17,7 +17,8 @@ impl RunTool {
             let brew_arg = brew.as_str();
             return Command::new("brew")
                 .args(["install", brew_arg])
-                .stdout(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn()
                 .unwrap();
         };
