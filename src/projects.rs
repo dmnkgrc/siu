@@ -1,7 +1,7 @@
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Command};
 use std::{env, fs, path::Path};
 
-use ratatui::widgets::ListItem;
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use walkdir::DirEntry;
 use walkdir::WalkDir;
@@ -12,15 +12,18 @@ pub struct RunTool {
 }
 
 impl RunTool {
+    pub fn get_name(&self) -> String {
+        if self.brew.is_some() {
+            return String::from("brew cask(s)");
+        };
+        unreachable!();
+    }
+
     pub fn get_install_cmd(self) -> Child {
         if let Some(brew) = self.brew {
-            let brew_arg = brew.as_str();
-            return Command::new("brew")
-                .args(["install", brew_arg])
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-                .unwrap();
+            let mut brew_args = brew.as_str().split(' ').collect::<Vec<&str>>();
+            brew_args.insert(0, "install");
+            return Command::new("brew").args(brew_args).spawn().unwrap();
         };
         unreachable!();
     }
@@ -39,9 +42,23 @@ pub struct Project {
     pub steps: Vec<Step>,
 }
 
-impl<'a> From<Project> for ListItem<'a> {
-    fn from(value: Project) -> Self {
-        ListItem::new(value.name)
+impl Project {
+    pub fn setup(&self) -> Result<(), String> {
+        for step in &self.steps {
+            println!("{}\n", step.description.underline().bold());
+            for run in &step.run {
+                let mut cmd = run.to_owned().get_install_cmd();
+                match cmd.wait() {
+                    Ok(status) => {
+                        if !status.success() {
+                            return Err(format!("Failed to install {}", run.get_name()));
+                        }
+                    }
+                    Err(e) => return Err(format!("Failed to run command: {}", e)),
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -117,35 +134,3 @@ pub fn get(name: &String) -> Result<Project, String> {
     path_buf.set_extension("yaml");
     parse_project_file_from_path(path_buf.as_path())
 }
-
-// fn install_tool(tool: &dyn Tool) -> Result<(), String> {
-//     match tool.install() {
-//         Ok(_) => Ok(()),
-//         Err(e) => Err(format!("Failed to install tool {}: {}", tool.name(), e)),
-//     }
-// }
-
-// fn setup_step(step: &Step) -> Result<(), String> {
-//     match step.tool {
-//         Some(SupportedTool::Homebrew) => install_tool(&homebrew::Homebrew {}),
-//         Some(SupportedTool::Node) => install_tool(&node::Node {}),
-//         None => {
-//             unimplemented!();
-//         }
-//     }
-// }
-//
-// pub fn setup(project: &Project) -> Result<(), String> {
-//     println!("\n\nSetting up project: {}\n", project.name);
-//     println!("{}\n", project.description);
-//     (project.steps.iter().enumerate()).for_each(|(i, step)| {
-//         println!("\n{}: {}\n", i + 1, step.description);
-//         match setup_step(step) {
-//             Ok(_) => {}
-//             Err(e) => {
-//                 panic!("Failed to setup step {}: {}", i + 1, e)
-//             }
-//         }
-//     });
-//     Ok(())
-// }

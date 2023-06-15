@@ -1,19 +1,25 @@
-use std::{error::Error, time::Duration};
+use std::error::Error;
 
-use cli::tui::{restore_terminal, run_app, setup_terminal, CliApp};
+use clap::Parser;
+use colored::Colorize;
 
-pub mod cli;
 pub mod projects;
 pub mod shell;
-pub mod tools;
+
+#[derive(Parser)]
+struct Cli {
+    project: String,
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     projects::init();
-    // create cli app and run it
-    let mut terminal = setup_terminal()?;
-    let tick_rate = Duration::from_millis(250);
-    let cli_app = CliApp::default();
-    run_app(&mut terminal, cli_app, tick_rate)?;
-    restore_terminal()?;
+    let cli = Cli::parse();
+    let project = projects::get(&cli.project).unwrap();
+    let title = format!("Will setup \"{}\"", project.name);
+    println!("\n\n{}", title.green().bold());
+    println!("{}\n\n", project.description.cyan());
+    if let Err(e) = project.setup() {
+        println!("\n{}", e.red());
+    }
     Ok(())
 }
