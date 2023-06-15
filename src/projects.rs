@@ -6,25 +6,26 @@ use serde::{Deserialize, Serialize};
 use walkdir::DirEntry;
 use walkdir::WalkDir;
 
-use crate::tools::{Tool, Tools};
+use crate::tools::homebrew::Homebrew;
+use crate::tools::pnpm::Pnpm;
+use crate::tools::types::Tool;
+use crate::tools::yarn::Yarn;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
-pub struct RunTool {
-    brew: Option<String>,
-    pnpm: Option<String>,
-    yarn: Option<String>,
+#[serde(untagged)]
+pub enum RunTool {
+    Homebrew { brew: Homebrew },
+    Pnpm { pnpm: Pnpm },
+    Yarn { yarn: Yarn },
 }
 
 impl RunTool {
     pub fn install(self) -> Result<(), String> {
-        if let Some(brew) = self.brew {
-            return brew.brew().install();
-        } else if let Some(pnpm) = self.pnpm {
-            return pnpm.pnpm().install();
-        } else if let Some(yarn) = self.yarn {
-            return yarn.yarn().install();
+        match self {
+            RunTool::Homebrew { brew } => brew.install(),
+            RunTool::Pnpm { pnpm } => pnpm.install(),
+            RunTool::Yarn { yarn } => yarn.install(),
         }
-        unreachable!();
     }
 }
 
