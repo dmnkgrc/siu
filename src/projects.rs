@@ -1,11 +1,12 @@
 use owo_colors::OwoColorize;
-use std::process::{Child, Command};
 
 use std::{env, fs, path::Path};
 
 use serde::{Deserialize, Serialize};
 use walkdir::DirEntry;
 use walkdir::WalkDir;
+
+use crate::tools::{Tool, Tools};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct RunTool {
@@ -15,32 +16,13 @@ pub struct RunTool {
 }
 
 impl RunTool {
-    pub fn get_name(&self) -> String {
-        if self.brew.is_some() {
-            return String::from("brew cask(s)");
-        } else if self.pnpm.is_some() {
-            return String::from("pnpm global package(s)");
-        } else if self.yarn.is_some() {
-            return String::from("yarn global package(s)");
-        }
-        unreachable!();
-    }
-
-    pub fn get_install_cmd(self) -> Child {
+    pub fn install(self) -> Result<(), String> {
         if let Some(brew) = self.brew {
-            let mut brew_args = brew.as_str().split(' ').collect::<Vec<&str>>();
-            brew_args.insert(0, "install");
-            return Command::new("brew").args(brew_args).spawn().unwrap();
+            return brew.brew().install();
         } else if let Some(pnpm) = self.pnpm {
-            let mut pnpm_args = pnpm.as_str().split(' ').collect::<Vec<&str>>();
-            pnpm_args.insert(0, "install");
-            pnpm_args.insert(1, "--global");
-            return Command::new("pnpm").args(pnpm_args).spawn().unwrap();
+            return pnpm.pnpm().install();
         } else if let Some(yarn) = self.yarn {
-            let mut yarn_args = yarn.as_str().split(' ').collect::<Vec<&str>>();
-            yarn_args.insert(0, "global");
-            yarn_args.insert(1, "add");
-            return Command::new("yarn").args(yarn_args).spawn().unwrap();
+            return yarn.yarn().install();
         }
         unreachable!();
     }
@@ -64,15 +46,7 @@ impl Project {
         for step in &self.steps {
             println!("{}\n", step.description.underline().bold());
             for run in &step.run {
-                let mut cmd = run.to_owned().get_install_cmd();
-                match cmd.wait() {
-                    Ok(status) => {
-                        if !status.success() {
-                            return Err(format!("Failed to install {}", run.get_name()));
-                        }
-                    }
-                    Err(e) => return Err(format!("Failed to run command: {}", e)),
-                }
+                run.clone().install()?
             }
         }
         Ok(())
