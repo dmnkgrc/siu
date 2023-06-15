@@ -10,6 +10,7 @@ use walkdir::WalkDir;
 pub struct RunTool {
     brew: Option<String>,
     pnpm: Option<String>,
+    yarn: Option<String>,
 }
 
 impl RunTool {
@@ -18,7 +19,9 @@ impl RunTool {
             return String::from("brew cask(s)");
         } else if self.pnpm.is_some() {
             return String::from("pnpm global package(s)");
-        };
+        } else if self.yarn.is_some() {
+            return String::from("yarn global package(s)");
+        }
         unreachable!();
     }
 
@@ -32,6 +35,11 @@ impl RunTool {
             pnpm_args.insert(0, "install");
             pnpm_args.insert(1, "--global");
             return Command::new("pnpm").args(pnpm_args).spawn().unwrap();
+        } else if let Some(yarn) = self.yarn {
+            let mut yarn_args = yarn.as_str().split(' ').collect::<Vec<&str>>();
+            yarn_args.insert(0, "global");
+            yarn_args.insert(1, "add");
+            return Command::new("yarn").args(yarn_args).spawn().unwrap();
         }
         unreachable!();
     }
