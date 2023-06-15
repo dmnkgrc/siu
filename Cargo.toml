@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
-colored = "2.0.0"
 home = "0.5.5"
+owo-colors = "3.5.0"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_yaml = "0.9.21"
 walkdir = "2.3.3"

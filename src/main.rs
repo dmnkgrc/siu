@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use clap::Parser;
-use colored::Colorize;
+use owo_colors::OwoColorize;
 
 pub mod projects;
 pub mod shell;

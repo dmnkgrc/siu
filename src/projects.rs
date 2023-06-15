@@ -1,7 +1,8 @@
+use owo_colors::OwoColorize;
 use std::process::{Child, Command};
+
 use std::{env, fs, path::Path};
 
-use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use walkdir::DirEntry;
 use walkdir::WalkDir;
