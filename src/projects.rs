@@ -9,12 +9,15 @@ use walkdir::WalkDir;
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct RunTool {
     brew: Option<String>,
+    pnpm: Option<String>,
 }
 
 impl RunTool {
     pub fn get_name(&self) -> String {
         if self.brew.is_some() {
             return String::from("brew cask(s)");
+        } else if self.pnpm.is_some() {
+            return String::from("pnpm global package(s)");
         };
         unreachable!();
     }
@@ -24,7 +27,12 @@ impl RunTool {
             let mut brew_args = brew.as_str().split(' ').collect::<Vec<&str>>();
             brew_args.insert(0, "install");
             return Command::new("brew").args(brew_args).spawn().unwrap();
-        };
+        } else if let Some(pnpm) = self.pnpm {
+            let mut pnpm_args = pnpm.as_str().split(' ').collect::<Vec<&str>>();
+            pnpm_args.insert(0, "install");
+            pnpm_args.insert(1, "--global");
+            return Command::new("pnpm").args(pnpm_args).spawn().unwrap();
+        }
         unreachable!();
     }
 }
