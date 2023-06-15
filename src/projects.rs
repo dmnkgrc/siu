@@ -44,7 +44,7 @@ pub struct Project {
 impl Project {
     pub fn setup(&self) -> Result<(), String> {
         for step in &self.steps {
-            println!("{}\n", step.description.underline().bold());
+            println!("\n{}", step.description.underline().bold());
             for run in &step.run {
                 run.clone().install()?
             }

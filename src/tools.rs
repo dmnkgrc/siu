@@ -1,5 +1,7 @@
 use std::process::Command;
 
+use owo_colors::OwoColorize;
+
 pub trait Tool {
     fn install(&self) -> Result<(), String>;
     fn print_command(&self);
@@ -11,6 +13,7 @@ pub struct Homebrew<'a> {
 
 impl<'a> Tool for Homebrew<'a> {
     fn install(&self) -> Result<(), String> {
+        self.print_command();
         let args = [Vec::from(["install"]), self.packages.to_owned()].concat();
         let mut child = Command::new("brew").args(args).spawn().unwrap();
         match child.wait() {
@@ -25,7 +28,10 @@ impl<'a> Tool for Homebrew<'a> {
         Ok(())
     }
     fn print_command(&self) {
-        println!("brew install {}", self.packages.join(" "));
+        println!(
+            "\n{}\n",
+            format!("brew install {}", self.packages.join(" ")).italic()
+        );
     }
 }
 
