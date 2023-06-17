@@ -8,6 +8,7 @@ use walkdir::WalkDir;
 
 use crate::tools::homebrew::Homebrew;
 use crate::tools::pnpm::Pnpm;
+use crate::tools::rbenv::Rbenv;
 use crate::tools::types::Tool;
 use crate::tools::yarn::Yarn;
 
@@ -16,6 +17,7 @@ use crate::tools::yarn::Yarn;
 pub enum RunTool {
     Homebrew { brew: Homebrew },
     Pnpm { pnpm: Pnpm },
+    Rbenv { rbenv: Rbenv },
     Yarn { yarn: Yarn },
 }
 
@@ -24,6 +26,7 @@ impl RunTool {
         match self {
             RunTool::Homebrew { brew } => brew.install(),
             RunTool::Pnpm { pnpm } => pnpm.install(),
+            RunTool::Rbenv { rbenv } => rbenv.install(),
             RunTool::Yarn { yarn } => yarn.install(),
         }
     }
