@@ -3,6 +3,7 @@ use std::error::Error;
 use clap::Parser;
 use owo_colors::OwoColorize;
 
+pub mod db;
 pub mod projects;
 pub mod shell;
 pub mod tools;

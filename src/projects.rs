@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use walkdir::DirEntry;
 use walkdir::WalkDir;
 
+use crate::db::Db;
 use crate::tools::homebrew::Homebrew;
 use crate::tools::pnpm::Pnpm;
 use crate::tools::rbenv::Rbenv;
@@ -22,7 +23,7 @@ pub enum RunTool {
 }
 
 impl RunTool {
-    pub fn install(self) -> Result<(), String> {
+    pub fn install(self, db: &Db) -> Result<(), String> {
         match self {
             RunTool::Homebrew { brew } => brew.install(),
             RunTool::Pnpm { pnpm } => pnpm.install(),
@@ -47,10 +48,11 @@ pub struct Project {
 
 impl Project {
     pub fn setup(&self) -> Result<(), String> {
+        let db = Db::default();
         for step in &self.steps {
             println!("\n{}", step.description.underline().bold());
             for run in &step.run {
-                run.clone().install()?
+                run.clone().install(&db)?
             }
         }
         Ok(())
