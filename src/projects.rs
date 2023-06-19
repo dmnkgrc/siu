@@ -105,7 +105,7 @@ impl ProjectConfiguration {
         let mut db = Db::default();
         let (project, progress) = self.get_project_progress(&mut db);
         if progress.sub_step > 0 {
-            println!("\nPicking up where you left off");
+            println!("{}", "Picking up where you left off".green().bold());
         }
         self.run_step(
             &project,

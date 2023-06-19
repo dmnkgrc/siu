@@ -51,6 +51,12 @@ impl Tool for Rbenv {
                         }
                     }
                 }
+                println!(
+                    "{}",
+                    "Open a new shell and run this command again to complete installation"
+                        .purple()
+                        .bold()
+                );
                 return Ok(true);
             }
         }

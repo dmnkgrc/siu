@@ -44,9 +44,10 @@ impl Shell {
         let path = &self.get_config_path();
         let file = fs::read(path).expect("Failed to read shell config file");
 
-        let contents = String::from_utf8_lossy(&file);
+        let mut contents = String::from_utf8_lossy(&file).to_string();
         if !contents.contains(s) {
-            fs::write(path, s.as_bytes()).expect("Failed to write to shell config file");
+            contents.push_str(s);
+            fs::write(path, contents.as_bytes()).expect("Failed to write to shell config file");
         }
         Ok(())
     }
