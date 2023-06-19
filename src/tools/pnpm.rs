@@ -18,7 +18,7 @@ impl Pnpm {
 }
 
 impl Tool for Pnpm {
-    fn install(&self) -> Result<(), String> {
+    fn install(&self, _: usize) -> Result<bool, String> {
         let args = [
             Vec::from(["install", "--global"]),
             self.get_packages().to_owned(),
@@ -34,7 +34,7 @@ impl Tool for Pnpm {
             Err(e) => return Err(format!("Failed to run command: {}", e)),
         }
 
-        Ok(())
+        Ok(false)
     }
     fn print_command(&self) {
         let Pnpm::Packages(s) = self;

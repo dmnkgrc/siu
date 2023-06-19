@@ -18,7 +18,7 @@ impl Homebrew {
 }
 
 impl Tool for Homebrew {
-    fn install(&self) -> Result<(), String> {
+    fn install(&self, _: usize) -> Result<bool, String> {
         self.print_command();
         let args = [Vec::from(["install"]), self.get_packages().to_owned()].concat();
         let mut child = Command::new("brew").args(args).spawn().unwrap();
@@ -31,7 +31,7 @@ impl Tool for Homebrew {
             Err(e) => return Err(format!("Failed to run command: {}", e)),
         }
 
-        Ok(())
+        Ok(false)
     }
 
     fn print_command(&self) {

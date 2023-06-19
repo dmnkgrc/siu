@@ -18,7 +18,7 @@ impl Yarn {
 }
 
 impl Tool for Yarn {
-    fn install(&self) -> Result<(), String> {
+    fn install(&self, _: usize) -> Result<bool, String> {
         let args = [Vec::from(["global", "add"]), self.get_packages().to_owned()].concat();
         let mut child = Command::new("yarn").args(args).spawn().unwrap();
         match child.wait() {
@@ -30,7 +30,7 @@ impl Tool for Yarn {
             Err(e) => return Err(format!("Failed to run command: {}", e)),
         }
 
-        Ok(())
+        Ok(false)
     }
     fn print_command(&self) {
         let Yarn::Packages(s) = self;

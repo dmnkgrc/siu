@@ -14,12 +14,12 @@ pub struct Rbenv {
 }
 
 impl Tool for Rbenv {
-    fn install(&self) -> Result<(), String> {
+    fn install(&self, sub_step: usize) -> Result<bool, String> {
         if let Some(install) = self.install {
-            if install {
-                let brew = Homebrew::Packages(String::from("rbenv"));
-                brew.install()?;
+            if install && sub_step == 0 {
                 let shell = shell::get_current().expect("Failed to get current shell");
+                let brew = Homebrew::Packages(String::from("rbenv"));
+                brew.install(sub_step)?;
                 match shell {
                     shell::Shell::Bash => {
                         println!("Adding rbenv config to bash config file");
@@ -51,18 +51,7 @@ impl Tool for Rbenv {
                         }
                     }
                 }
-                let mut source_cmd = Command::new("ls")
-                    .arg(shell.get_config_path_str())
-                    .spawn()
-                    .unwrap();
-                match source_cmd.wait() {
-                    Ok(status) => {
-                        if !status.success() {
-                            return Err("Failed to source shell config".to_string());
-                        }
-                    }
-                    Err(e) => return Err(format!("Failed to run command: {}", e)),
-                }
+                return Ok(true);
             }
         }
         self.print_command();
@@ -99,7 +88,7 @@ impl Tool for Rbenv {
             }
         }
 
-        Ok(())
+        Ok(false)
     }
     fn print_command(&self) {
         println!(

@@ -5,8 +5,10 @@ use owo_colors::OwoColorize;
 
 pub mod db;
 pub mod projects;
+pub mod schema;
 pub mod shell;
 pub mod tools;
+pub mod models;
 
 #[derive(Parser)]
 struct Cli {
