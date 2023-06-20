@@ -134,6 +134,13 @@ impl ProjectConfiguration {
             Err(e) => Err(e),
         }
     }
+
+    pub fn reset(&self) -> Result<(), String> {
+        let mut db = Db::default();
+        let project = db.get_project(&self.name).unwrap();
+        db.update_project_progress(&project, &0, &0, &0);
+        Ok(())
+    }
 }
 
 fn get_projects_path() -> String {
