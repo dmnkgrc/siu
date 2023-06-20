@@ -13,7 +13,8 @@ diesel::table! {
         id -> Integer,
         project_id -> Integer,
         step -> Integer,
-        sub_step -> Integer,
+        tool -> Integer,
+        tool_step -> Integer,
     }
 }
 

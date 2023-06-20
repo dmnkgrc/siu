@@ -25,12 +25,12 @@ pub enum RunTool {
 }
 
 impl RunTool {
-    pub fn install(self, sub_step: usize) -> Result<bool, String> {
+    pub fn install(self, tool_step: usize) -> Result<bool, String> {
         match self {
-            RunTool::Homebrew { brew } => brew.install(sub_step),
-            RunTool::Pnpm { pnpm } => pnpm.install(sub_step),
-            RunTool::Rbenv { rbenv } => rbenv.install(sub_step),
-            RunTool::Yarn { yarn } => yarn.install(sub_step),
+            RunTool::Homebrew { brew } => brew.install(tool_step),
+            RunTool::Pnpm { pnpm } => pnpm.install(tool_step),
+            RunTool::Rbenv { rbenv } => rbenv.install(tool_step),
+            RunTool::Yarn { yarn } => yarn.install(tool_step),
         }
     }
 }
@@ -54,35 +54,39 @@ impl ProjectConfiguration {
         project: &Project,
         db: &mut Db,
         index: usize,
-        sub_step: usize,
+        tool: usize,
+        tool_step: usize,
     ) -> Result<(), String> {
         let step = &self.steps[index];
         println!("\n{}", step.description.underline().bold());
 
-        let tools: Vec<RunTool> = step.run.clone().drain(sub_step..).collect();
+        let tools: Vec<RunTool> = step.run.clone().drain(tool..).collect();
 
         for run in tools {
-            match run.install(sub_step) {
+            match run.install(tool_step) {
                 Ok(pause) => {
                     if pause {
                         db.update_project_progress(
                             project,
                             &(index as i32),
-                            &(sub_step as i32 + 1),
+                            &(tool as i32),
+                            &(tool_step as i32 + 1),
                         );
                         return Ok(());
                     }
                 }
                 Err(e) => return Err(e),
             }
+            db.update_project_progress(project, &(index as i32), &(tool as i32 + 1), &0);
         }
+        let new_progress = db.update_project_progress(project, &((index + 1) as i32), &0, &0);
         if index < self.steps.len() - 1 {
-            let new_progress = db.update_project_progress(project, &((index + 1) as i32), &0);
             return self.run_step(
                 project,
                 db,
                 new_progress.step as usize,
-                new_progress.sub_step as usize,
+                new_progress.tool as usize,
+                new_progress.tool_step as usize,
             );
         }
         Ok(())
@@ -104,14 +108,15 @@ impl ProjectConfiguration {
     pub fn setup(&self) -> Result<(), String> {
         let mut db = Db::default();
         let (project, progress) = self.get_project_progress(&mut db);
-        if progress.sub_step > 0 {
+        if progress.tool > 0 || progress.tool_step > 0 {
             println!("{}", "Picking up where you left off".green().bold());
         }
         self.run_step(
             &project,
             &mut db,
             progress.step as usize,
-            progress.sub_step as usize,
+            progress.tool as usize,
+            progress.tool_step as usize,
         )
     }
 }

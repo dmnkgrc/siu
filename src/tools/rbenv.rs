@@ -14,12 +14,12 @@ pub struct Rbenv {
 }
 
 impl Tool for Rbenv {
-    fn install(&self, sub_step: usize) -> Result<bool, String> {
+    fn install(&self, tool_step: usize) -> Result<bool, String> {
         if let Some(install) = self.install {
-            if install && sub_step == 0 {
+            if install && tool_step == 0 {
                 let shell = shell::get_current().expect("Failed to get current shell");
                 let brew = Homebrew::Packages(String::from("rbenv"));
-                brew.install(sub_step)?;
+                brew.install(tool_step)?;
                 match shell {
                     shell::Shell::Bash => {
                         println!("Adding rbenv config to bash config file");

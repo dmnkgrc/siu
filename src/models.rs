@@ -25,7 +25,8 @@ pub struct ProjectProgress {
     pub id: i32,
     pub project_id: i32,
     pub step: i32,
-    pub sub_step: i32,
+    pub tool: i32,
+    pub tool_step: i32,
 }
 
 #[derive(Insertable)]
@@ -33,5 +34,6 @@ pub struct ProjectProgress {
 pub struct NewProjectProgress {
     pub project_id: i32,
     pub step: i32,
-    pub sub_step: i32,
+    pub tool: i32,
+    pub tool_step: i32,
 }

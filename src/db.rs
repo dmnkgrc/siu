@@ -55,7 +55,8 @@ impl Db {
                 let new_project_progress = NewProjectProgress {
                     project_id: proj.id,
                     step: 0,
-                    sub_step: 0,
+                    tool: 0,
+                    tool_step: 0,
                 };
                 diesel::insert_into(projects_progress)
                     .values(&new_project_progress)
@@ -69,7 +70,8 @@ impl Db {
         &mut self,
         proj: &Project,
         step: &i32,
-        sub_step: &i32,
+        tool: &i32,
+        tool_step: &i32,
     ) -> ProjectProgress {
         use crate::schema::projects_progress;
         let progress = ProjectProgress::belonging_to(proj)
@@ -79,7 +81,8 @@ impl Db {
         diesel::update(&progress)
             .set((
                 projects_progress::step.eq(step),
-                projects_progress::sub_step.eq(sub_step),
+                projects_progress::tool.eq(tool),
+                projects_progress::tool_step.eq(tool_step),
             ))
             .get_result(&mut self.conn)
             .unwrap()
