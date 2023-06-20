@@ -1,7 +1,6 @@
 use std::env;
 
 use diesel::prelude::*;
-use dotenvy::dotenv;
 
 use crate::models::{NewProject, NewProjectProgress, Project, ProjectProgress};
 
@@ -11,8 +10,8 @@ pub struct Db {
 
 impl Db {
     pub fn new() -> Self {
-        dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL is not set");
+        let home = env::var("HOME").unwrap();
+        let database_url = format!("{}/.cache/smu.sqlite", home);
 
         let conn = SqliteConnection::establish(&database_url)
             .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
