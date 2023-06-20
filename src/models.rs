@@ -17,7 +17,7 @@ pub struct NewProject<'a> {
     pub path: &'a str,
 }
 
-#[derive(Queryable, Selectable, Associations, Identifiable, Clone, Copy)]
+#[derive(Queryable, Selectable, Associations, Identifiable, Clone, Copy, Debug)]
 #[diesel(table_name = projects_progress)]
 #[diesel(belongs_to(Project))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

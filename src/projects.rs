@@ -56,7 +56,7 @@ impl ProjectConfiguration {
         index: usize,
         tool: usize,
         tool_step: usize,
-    ) -> Result<(), String> {
+    ) -> Result<ProjectProgress, String> {
         let step = &self.steps[index];
         println!("\n{}", step.description.underline().bold());
 
@@ -66,13 +66,13 @@ impl ProjectConfiguration {
             match run.install(tool_step) {
                 Ok(pause) => {
                     if pause {
-                        db.update_project_progress(
+                        let saved_progress = db.update_project_progress(
                             project,
                             &(index as i32),
                             &(tool as i32),
                             &(tool_step as i32 + 1),
                         );
-                        return Ok(());
+                        return Ok(saved_progress);
                     }
                 }
                 Err(e) => return Err(e),
@@ -89,7 +89,7 @@ impl ProjectConfiguration {
                 new_progress.tool_step as usize,
             );
         }
-        Ok(())
+        Ok(new_progress)
     }
 
     fn get_project_progress(&self, db: &mut Db) -> (Project, ProjectProgress) {
@@ -111,13 +111,22 @@ impl ProjectConfiguration {
         if progress.tool > 0 || progress.tool_step > 0 {
             println!("{}", "Picking up where you left off".green().bold());
         }
-        self.run_step(
+        let progress_result = self.run_step(
             &project,
             &mut db,
             progress.step as usize,
             progress.tool as usize,
             progress.tool_step as usize,
-        )
+        );
+        match progress_result {
+            Ok(progress) => {
+                if progress.step as usize > self.steps.len() - 1 {
+                    db.update_project_progress(&project, &0, &0, &0);
+                }
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
     }
 }
 
