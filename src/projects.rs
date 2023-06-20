@@ -9,7 +9,9 @@ use walkdir::WalkDir;
 use crate::db::Db;
 use crate::models::Project;
 use crate::models::ProjectProgress;
+use crate::tools::chezmoi::Chezmoi;
 use crate::tools::homebrew::Homebrew;
+use crate::tools::java11::Java11;
 use crate::tools::pnpm::Pnpm;
 use crate::tools::rbenv::Rbenv;
 use crate::tools::types::Tool;
@@ -18,16 +20,20 @@ use crate::tools::yarn::Yarn;
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 #[serde(untagged)]
 pub enum RunTool {
+    Chezmoi { chezmoi: Chezmoi },
     Homebrew { brew: Homebrew },
     Pnpm { pnpm: Pnpm },
     Rbenv { rbenv: Rbenv },
     Yarn { yarn: Yarn },
+    Java11(String),
 }
 
 impl RunTool {
     pub fn install(self, tool_step: usize) -> Result<bool, String> {
         match self {
+            RunTool::Chezmoi { chezmoi } => chezmoi.install(tool_step),
             RunTool::Homebrew { brew } => brew.install(tool_step),
+            RunTool::Java11(_) => Java11 {}.install(tool_step),
             RunTool::Pnpm { pnpm } => pnpm.install(tool_step),
             RunTool::Rbenv { rbenv } => rbenv.install(tool_step),
             RunTool::Yarn { yarn } => yarn.install(tool_step),
