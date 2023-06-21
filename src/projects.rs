@@ -22,10 +22,11 @@ use crate::tools::yarn::Yarn;
 pub enum RunTool {
     Chezmoi { chezmoi: Chezmoi },
     Homebrew { brew: Homebrew },
+    Java11(String),
+    Note { note: String },
     Pnpm { pnpm: Pnpm },
     Rbenv { rbenv: Rbenv },
     Yarn { yarn: Yarn },
-    Java11(String),
 }
 
 impl RunTool {
@@ -34,6 +35,10 @@ impl RunTool {
             RunTool::Chezmoi { chezmoi } => chezmoi.install(tool_step),
             RunTool::Homebrew { brew } => brew.install(tool_step),
             RunTool::Java11(_) => Java11 {}.install(tool_step),
+            RunTool::Note { note } => {
+                println!("\n\n{}\n", note.bold());
+                Ok(false)
+            }
             RunTool::Pnpm { pnpm } => pnpm.install(tool_step),
             RunTool::Rbenv { rbenv } => rbenv.install(tool_step),
             RunTool::Yarn { yarn } => yarn.install(tool_step),
