@@ -62,7 +62,7 @@ const config = {
         title: "SMU",
         logo: {
           alt: "Set Me Up",
-          src: "img/logo.svg",
+          src: "img/logo.png",
         },
         items: [
           {
