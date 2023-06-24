@@ -1,5 +1,12 @@
+use crossterm::event::poll;
+use crossterm::event::read;
+use crossterm::event::Event;
+use crossterm::event::KeyCode;
+use crossterm::terminal::disable_raw_mode;
+use crossterm::terminal::enable_raw_mode;
 use owo_colors::OwoColorize;
 
+use std::time::Duration;
 use std::{env, fs, path::Path};
 
 use serde::{Deserialize, Serialize};
@@ -22,8 +29,9 @@ use crate::tools::yarn::Yarn;
 pub enum RunTool {
     Chezmoi { chezmoi: Chezmoi },
     Homebrew { brew: Homebrew },
-    Java11(String),
+    Java11 { java11: bool },
     Note { note: String },
+    Pause { pause: bool },
     Pnpm { pnpm: Pnpm },
     Rbenv { rbenv: Rbenv },
     Yarn { yarn: Yarn },
@@ -34,9 +42,23 @@ impl RunTool {
         match self {
             RunTool::Chezmoi { chezmoi } => chezmoi.install(tool_step),
             RunTool::Homebrew { brew } => brew.install(tool_step),
-            RunTool::Java11(_) => Java11 {}.install(tool_step),
+            RunTool::Java11 { java11: _ } => Java11 {}.install(tool_step),
             RunTool::Note { note } => {
                 println!("\n\n{}\n", note.bold());
+                Ok(false)
+            }
+            RunTool::Pause { pause: _ } => {
+                enable_raw_mode().unwrap();
+                println!("\n\n{}\n", "Press Enter to continue".bold());
+                loop {
+                    if (poll(Duration::from_millis(300))).unwrap() {
+                        let event = read().unwrap();
+                        if event == Event::Key(KeyCode::Enter.into()) {
+                            break;
+                        }
+                    }
+                }
+                disable_raw_mode().unwrap();
                 Ok(false)
             }
             RunTool::Pnpm { pnpm } => pnpm.install(tool_step),

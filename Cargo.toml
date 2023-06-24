@@ -13,3 +13,4 @@ serde = { version = "1.0.163", features = ["derive"] }
 serde_yaml = "0.9.21"
 walkdir = "2.3.3"
 diesel = { version = "2.1.0", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+crossterm = { version = "0.23", features = ["event-stream"]}
