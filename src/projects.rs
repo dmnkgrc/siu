@@ -1,11 +1,16 @@
+use crossterm::cursor;
 use crossterm::event::poll;
 use crossterm::event::read;
 use crossterm::event::Event;
 use crossterm::event::KeyCode;
+use crossterm::execute;
+use crossterm::style::Print;
 use crossterm::terminal::disable_raw_mode;
 use crossterm::terminal::enable_raw_mode;
 use owo_colors::OwoColorize;
 
+use std::io::stdout;
+use std::process::exit;
 use std::time::Duration;
 use std::{env, fs, path::Path};
 
@@ -49,12 +54,16 @@ impl RunTool {
             }
             RunTool::Pause { pause: _ } => {
                 enable_raw_mode().unwrap();
-                println!("\n\n{}\n", "Press Enter to continue".bold());
+                let text = format!("\n\n{}\n", "Press Enter to continue or q to exit".bold());
+                execute!(stdout(), Print(&text), cursor::MoveToNextLine(1)).unwrap();
                 loop {
                     if (poll(Duration::from_millis(300))).unwrap() {
                         let event = read().unwrap();
                         if event == Event::Key(KeyCode::Enter.into()) {
                             break;
+                        }
+                        if event == Event::Key(KeyCode::Char('q').into()) {
+                            exit(0);
                         }
                     }
                 }
