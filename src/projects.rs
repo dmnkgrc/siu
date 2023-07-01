@@ -1,17 +1,8 @@
-use crossterm::cursor;
-use crossterm::event::poll;
-use crossterm::event::read;
-use crossterm::event::Event;
-use crossterm::event::KeyCode;
-use crossterm::execute;
-use crossterm::style::Print;
-use crossterm::terminal::disable_raw_mode;
-use crossterm::terminal::enable_raw_mode;
+use dialoguer::theme::ColorfulTheme;
+use dialoguer::Confirm;
 use owo_colors::OwoColorize;
 
-use std::io::stdout;
 use std::process::exit;
-use std::time::Duration;
 use std::{env, fs, path::Path};
 
 use serde::{Deserialize, Serialize};
@@ -53,22 +44,20 @@ impl RunTool {
                 Ok(false)
             }
             RunTool::Pause { pause: _ } => {
-                enable_raw_mode().unwrap();
-                let text = format!("\n\n{}\n", "Press Enter to continue or q to exit".bold());
-                execute!(stdout(), Print(&text), cursor::MoveToNextLine(1)).unwrap();
-                loop {
-                    if (poll(Duration::from_millis(300))).unwrap() {
-                        let event = read().unwrap();
-                        if event == Event::Key(KeyCode::Enter.into()) {
-                            break;
-                        }
-                        if event == Event::Key(KeyCode::Char('q').into()) {
-                            exit(0);
-                        }
-                    }
+                let theme = ColorfulTheme::default();
+                println!("\nAre you ready to continue?");
+                match Confirm::with_theme(&theme)
+                    .with_prompt(
+                        "Press Enter or 'y' to continue or Esc, 'q' or 'n' to exit and finish later",
+                    )
+                    .default(true)
+                    .interact_opt()
+                    .unwrap()
+                {
+                    Some(true) => Ok(false),
+                    Some(false) => exit(0),
+                    None => exit(0),
                 }
-                disable_raw_mode().unwrap();
-                Ok(false)
             }
             RunTool::Pnpm { pnpm } => pnpm.install(tool_step),
             RunTool::Rbenv { rbenv } => rbenv.install(tool_step),
