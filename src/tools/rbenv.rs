@@ -42,21 +42,21 @@ impl Tool for Rbenv {
                     );
                     return Ok(true);
                 }
-                return Ok(false);
             }
         }
         self.print_command();
-        let mut child = Command::new("rbenv")
+        let child = Command::new("rbenv")
             .args(["install", &self.ruby_version])
             .spawn()
             .unwrap();
-        match child.wait() {
-            Ok(status) => {
-                if !status.success() {
-                    return Err("Failed to install ruby version".to_string());
-                }
+        let output = child.wait_with_output().expect("Failed to run command");
+        if !output.status.success() {
+            let err_output = String::from_utf8(output.stderr).unwrap();
+            // Rbenv handles aborting when a ruby version is already installed with
+            // an exit code of 1, but it is not an error.
+            if !err_output.is_empty() {
+                return Err("Failed to install ruby version".to_string());
             }
-            Err(e) => return Err(format!("Failed to run command: {}", e)),
         }
         if let Some(global) = self.global {
             if global {
