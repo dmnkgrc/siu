@@ -20,44 +20,29 @@ impl Tool for Rbenv {
                 let shell = shell::get_current().expect("Failed to get current shell");
                 let brew = Homebrew::Packages(String::from("rbenv"));
                 brew.install(tool_step)?;
-                match shell {
-                    shell::Shell::Bash => {
-                        println!("Adding rbenv config to bash config file");
-                        if let Err(e) = shell.write_to_config("eval \"$(rbenv init - bash)\"") {
-                            return Err(format!(
-                                "Failed to write rbenv config to bash config: {}",
-                                e
-                            ));
-                        }
+                let rbenv_shell_config = match shell {
+                    shell::Shell::Bash => "eval \"$(rbenv init - bash)\"",
+                    shell::Shell::Zsh => "eval \"$(rbenv init - zsh)\"",
+                    shell::Shell::Fish => "status --is-interactive; and rbenv init - fish | source",
+                };
+                if !shell.config_contains_string(rbenv_shell_config) {
+                    println!("Adding rbenv config to {} config file", shell.name());
+                    if let Err(e) = shell.write_to_config(rbenv_shell_config) {
+                        return Err(format!(
+                            "Failed to write rbenv config to {} config: {}",
+                            shell.name(),
+                            e
+                        ));
                     }
-                    shell::Shell::Zsh => {
-                        println!("Adding rbenv config to zsh config file");
-                        if let Err(e) = shell.write_to_config("eval \"$(rbenv init - zsh)\"") {
-                            return Err(format!(
-                                "Failed to write rbenv config to zsh config: {}",
-                                e
-                            ));
-                        }
-                    }
-                    shell::Shell::Fish => {
-                        println!("Adding rbenv config to fish config file");
-                        if let Err(e) = shell.write_to_config(
-                            "status --is-interactive; and rbenv init - fish | source",
-                        ) {
-                            return Err(format!(
-                                "Failed to write rbenv config to fish config: {}",
-                                e
-                            ));
-                        }
-                    }
+                    println!(
+                        "\n{}",
+                        "Open a new shell and run this command again to complete installation"
+                            .purple()
+                            .bold()
+                    );
+                    return Ok(true);
                 }
-                println!(
-                    "\n{}",
-                    "Open a new shell and run this command again to complete installation"
-                        .purple()
-                        .bold()
-                );
-                return Ok(true);
+                return Ok(false);
             }
         }
         self.print_command();
