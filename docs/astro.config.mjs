@@ -2,7 +2,6 @@ import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
 import svelte from "@astrojs/svelte";
-import tailwind from "@astrojs/tailwind";
 
 // https://astro.build/config
 export default defineConfig({
@@ -35,7 +34,6 @@ export default defineConfig({
       ],
     }),
     svelte(),
-    tailwind(),
   ],
   image: {
     service: {
