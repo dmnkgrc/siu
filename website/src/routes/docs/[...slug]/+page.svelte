@@ -6,15 +6,15 @@
 
 <svelet:head>
   <title>
-    {data.page.data.title} • Docs • smu
+    {data.page.frontmatter.title} • Docs • smu
   </title>
-  <meta name="Description" content="{data.page.data.title} • smu documentation" />
+  <meta name="Description" content="{data.page.frontmatter.title} • smu documentation" />
 </svelet:head>
 
 <div>
-  <h1 class="h1 pb-10">{data.page.data.title}</h1>
-  <section>
+  <h1 class="h1 pb-10">{data.page.frontmatter.title}</h1>
+  <article class="prose lg:prose-xl prose-stone">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html data.page.content}
-	</section>
+	</article>
 </div>

@@ -13,7 +13,7 @@ Setting up SMU **is super simple**
 ## Installation
 
 ```bash
-brew install dmnkgrc/smu/smu
+$ brew install dmnkgrc/smu/smu
 ```
 
 ## Create your first project

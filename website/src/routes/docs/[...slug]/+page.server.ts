@@ -6,6 +6,7 @@ import remarkParseFrontmatter from 'remark-parse-frontmatter'
 import remarkRehype from 'remark-rehype'
 import rehypeStringify from 'rehype-stringify'
 import rehypeHighlight from 'rehype-highlight'
+import { z } from 'zod'
 
 const base = '../docs'
 
@@ -21,8 +22,12 @@ const parseFile = async (path: string) => {
     .use(rehypeHighlight)
     .use(rehypeStringify)
     .process(fs.readFileSync(path, 'utf8'))
+  const frontmatter = z.object({
+     title: z.string(),
+  }).parse(file.data.frontmatter)
   return {
-    data: file.data.frontmatter,
+    frontmatter: frontmatter,
+    raw: fs.readFileSync(path, 'utf8'),
     content: file.toString(),
   }
 }
