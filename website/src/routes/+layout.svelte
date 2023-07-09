@@ -1,22 +1,22 @@
 <script lang="ts">
-	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
+	import NavLink from '$lib/NavLink.svelte';
+	import logo from '$lib/assets/logo.svg';
+	import { AppBar, AppShell } from '@skeletonlabs/skeleton';
+	import { LightSwitch } from '@skeletonlabs/skeleton';
+	import { storeHighlightJs } from '@skeletonlabs/skeleton';
 	import '@skeletonlabs/skeleton/styles/skeleton.css';
+	import '@skeletonlabs/skeleton/themes/theme-skeleton.css';
+	import { GithubLogo } from '@steeze-ui/radix-icons';
+	import { Icon } from '@steeze-ui/svelte-icon';
+	import hljs from 'highlight.js';
 	import 'highlight.js/styles/tokyo-night-dark.css';
 
 	// Most of your app wide CSS should be put in this file
 	import '../app.postcss';
-	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
-
-	import { Icon } from '@steeze-ui/svelte-icon';
-	import { GithubLogo } from '@steeze-ui/radix-icons';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
-	import NavLink from '$lib/NavLink.svelte';
-	import logo from '$lib/assets/logo.svg';
-	import hljs from 'highlight.js';
-
-	import { storeHighlightJs } from '@skeletonlabs/skeleton';
 
 	storeHighlightJs.set(hljs);
+
+	export const prerender = true;
 </script>
 
 <!-- App Shell -->
