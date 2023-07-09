@@ -15,8 +15,6 @@
 	import '../app.postcss';
 
 	storeHighlightJs.set(hljs);
-
-	export const prerender = true;
 </script>
 
 <!-- App Shell -->

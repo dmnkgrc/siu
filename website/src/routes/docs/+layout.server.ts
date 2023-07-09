@@ -12,7 +12,7 @@ const getNodes = (options: { path: string; requestedPath: string }): Node[] => {
 		const newSubPath = options.path ? `${options.path}/${subdir}` : subdir;
 		const newPath = `${base}/${newSubPath}`;
 		const url = newPath.replace('.', '').replace('.mdx', '');
-		const name = subdir.replace('.mdx', '').replace('-', ' ');
+		const name = subdir.replace('.mdx', '').replaceAll('-', ' ');
 
 		if (fs.statSync(newPath).isDirectory()) {
 			structure.push({
@@ -34,7 +34,9 @@ const getNodes = (options: { path: string; requestedPath: string }): Node[] => {
 export const prerender = true;
 
 export const load: PageServerLoad = async ({ params }) => {
+	const crumbs = params.slug.split('/').map((part) => part.replaceAll('-', ' '));
 	return {
+		crumbs,
 		structure: getNodes({ path: '', requestedPath: params.slug })
 	};
 };
