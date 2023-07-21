@@ -12,5 +12,9 @@ owo-colors = "3.5.0"
 serde = { version = "1.0.163", features = ["derive"] }
 serde_yaml = "0.9.21"
 walkdir = "2.3.3"
-diesel = { version = "2.1.0", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+diesel = { version = "2.1.0", features = [
+  "sqlite",
+  "returning_clauses_for_sqlite_3_35",
+] }
 dialoguer = { version = "0.10.4" }
+difference = "2.0"

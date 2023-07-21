@@ -1,7 +1,11 @@
 use std::{
     env, fs,
     path::{Path, PathBuf},
+    process::exit,
 };
+
+use dialoguer::{theme::ColorfulTheme, Confirm};
+use owo_colors::OwoColorize;
 
 pub enum Shell {
     Bash,
@@ -53,7 +57,20 @@ impl Shell {
         let mut contents = String::from_utf8_lossy(&file).to_string();
         if !self.config_contains_string(s) {
             contents.push_str(s);
-            fs::write(path, contents.as_bytes()).expect("Failed to write to shell config file");
+
+            let theme = ColorfulTheme::default();
+            println!("\nWe will add the following line to your shell config file: ");
+            println!("{}", s.green());
+            if Confirm::with_theme(&theme)
+                .with_prompt("is that okay?")
+                .interact()
+                .expect("Failed to read user input")
+            {
+                fs::write(path, contents.as_bytes()).expect("Failed to write to shell config file");
+                return Ok(());
+            }
+            println!("Make sure to add that it to you shell config before continuing.");
+            exit(1);
         }
         Ok(())
     }

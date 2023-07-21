@@ -4,6 +4,7 @@ use clap::Parser;
 use owo_colors::OwoColorize;
 
 pub mod db;
+pub mod diff;
 pub mod models;
 pub mod projects;
 pub mod schema;
