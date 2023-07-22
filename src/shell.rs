@@ -1,7 +1,7 @@
 use std::{
     env, fs,
     path::{Path, PathBuf},
-    process::exit,
+    process::{exit, Command},
 };
 
 use dialoguer::{theme::ColorfulTheme, Confirm};
@@ -48,6 +48,14 @@ impl Shell {
         fs::read_to_string(self.get_config_path_str())
             .unwrap()
             .contains(s)
+    }
+
+    pub fn has_command(&self, cmd: &str) -> bool {
+        let output = Command::new("which")
+            .arg(cmd)
+            .output()
+            .expect("failed to execute process");
+        return output.status.success();
     }
 
     pub fn write_to_config(&self, s: &str) -> Result<(), String> {

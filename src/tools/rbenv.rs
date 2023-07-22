@@ -15,9 +15,9 @@ pub struct Rbenv {
 
 impl Tool for Rbenv {
     fn install(&self, tool_step: usize) -> Result<bool, String> {
+        let shell = shell::get_current().expect("Failed to get current shell");
         if let Some(install) = self.install {
             if install && tool_step == 0 {
-                let shell = shell::get_current().expect("Failed to get current shell");
                 let brew = Homebrew::Packages(String::from("rbenv"));
                 brew.install(tool_step)?;
                 let rbenv_shell_config = match shell {
@@ -44,6 +44,14 @@ impl Tool for Rbenv {
                 }
             }
         }
+
+        if !shell.has_command("rbenv") {
+            return Err(
+                "rbenv not found, make sure you completed the previous step before continuing"
+                    .to_string(),
+            );
+        }
+
         self.print_command();
         let child = Command::new("rbenv")
             .args(["install", &self.ruby_version])
