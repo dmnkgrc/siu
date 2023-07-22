@@ -33,7 +33,7 @@ impl Tool for Chezmoi {
         match child.wait() {
             Ok(status) => {
                 if !status.success() {
-                    return Err("Failed to install ruby version".to_string());
+                    return Err("Failed to install chezmoi".to_string());
                 }
             }
             Err(e) => return Err(format!("Failed to run command: {}", e)),
