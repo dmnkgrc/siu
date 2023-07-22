@@ -55,7 +55,7 @@ impl Shell {
             .arg(cmd)
             .output()
             .expect("failed to execute process");
-        return output.status.success();
+        output.status.success()
     }
 
     pub fn write_to_config(&self, s: &str) -> Result<(), String> {

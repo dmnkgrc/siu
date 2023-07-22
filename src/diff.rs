@@ -4,8 +4,8 @@ use owo_colors::OwoColorize;
 pub fn print_diff(text1: &str, text2: &str) {
     let Changeset { diffs, .. } = Changeset::new(text1, text2, "\n");
 
-    for i in 0..diffs.len() {
-        match diffs[i] {
+    for diff in diffs {
+        match diff {
             Difference::Same(ref x) => {
                 println!("{}", x);
             }
