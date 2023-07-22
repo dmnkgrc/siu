@@ -29,9 +29,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         return Ok(());
     }
-    let title = format!("Will setup \"{}\"", project.name);
+    let title = format!("Will setup \"{}\"", project.options.name);
     println!("\n\n{}", title.green().bold());
-    println!("{}\n\n", project.description.cyan());
+    println!("{}\n\n", project.options.description.cyan());
     if let Err(e) = project.setup() {
         println!("\n{}", e.red());
     }

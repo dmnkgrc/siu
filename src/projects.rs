@@ -73,10 +73,17 @@ pub struct StepConfiguration {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub struct ProjectConfiguration {
+pub struct YamlConfiguration {
     pub name: String,
     pub description: String,
     pub steps: Vec<StepConfiguration>,
+}
+
+pub struct ProjectConfiguration {
+    pub options: YamlConfiguration,
+    // Actual path in the system
+    pub path: String,
+    url: Option<String>,
 }
 
 impl ProjectConfiguration {
@@ -88,7 +95,7 @@ impl ProjectConfiguration {
         tool: usize,
         tool_step: usize,
     ) -> Result<ProjectProgress, String> {
-        let step = &self.steps[index];
+        let step = &self.options.steps[index];
         println!("\n{}", step.description.underline().bold());
 
         let tools: Vec<RunTool> = step.run.clone().drain(tool..).collect();
@@ -111,7 +118,7 @@ impl ProjectConfiguration {
             db.update_project_progress(project, &(index as i32), &(tool as i32 + 1), &0);
         }
         let new_progress = db.update_project_progress(project, &((index + 1) as i32), &0, &0);
-        if index < self.steps.len() - 1 {
+        if index < self.options.steps.len() - 1 {
             return self.run_step(
                 project,
                 db,
@@ -124,13 +131,10 @@ impl ProjectConfiguration {
     }
 
     fn get_project_progress(&self, db: &mut Db) -> (Project, ProjectProgress) {
-        match db.get_project(&self.name) {
+        match db.get_project(&self.options.name) {
             Some(project) => (project.clone(), db.get_project_progress(&project)),
             None => {
-                let projects_path = get_projects_path();
-                let mut path_buf = Path::new(&projects_path).join(&self.name);
-                path_buf.set_extension("yaml");
-                let project = db.create_project(&self.name, path_buf.to_str().unwrap());
+                let project = db.create_project(&self.options.name, &self.path);
                 (project.clone(), db.get_project_progress(&project))
             }
         }
@@ -151,7 +155,7 @@ impl ProjectConfiguration {
         );
         match progress_result {
             Ok(progress) => {
-                if progress.step as usize > self.steps.len() - 1 {
+                if progress.step as usize > self.options.steps.len() - 1 {
                     db.update_project_progress(&project, &0, &0, &0);
                 }
                 Ok(())
@@ -162,7 +166,7 @@ impl ProjectConfiguration {
 
     pub fn reset(&self) -> Result<(), String> {
         let mut db = Db::default();
-        let project = db.get_project(&self.name).unwrap();
+        let project = db.get_project(&self.options.name).unwrap();
         db.update_project_progress(&project, &0, &0, &0);
         Ok(())
     }
@@ -189,25 +193,40 @@ pub fn init() {
     }
 }
 
-fn parse_project_file(project_file: &fs::File) -> Result<ProjectConfiguration, String> {
+fn parse_project_file(
+    project_file: &fs::File,
+    file_path: &Path,
+    url: Option<String>,
+) -> Result<ProjectConfiguration, String> {
     match serde_yaml::from_reader(project_file) {
-        Ok(project) => Ok(project),
+        Ok(options) => Ok(ProjectConfiguration {
+            options,
+            path: file_path.to_str().unwrap().to_string(),
+            url,
+        }),
         Err(e) => Err(format!("Failed to parse project file: {}", e)),
     }
 }
 
-fn parse_project_file_from_path(path: &Path) -> Result<ProjectConfiguration, String> {
+fn parse_project_file_from_path(
+    path: &Path,
+    url: Option<String>,
+) -> Result<ProjectConfiguration, String> {
     match fs::File::open(path) {
-        Ok(file) => parse_project_file(&file),
+        Ok(file) => parse_project_file(&file, path, url),
         Err(e) => Err(format!("Failed to open project file: {}", e)),
     }
+}
+
+fn has_yaml_extension(s: &str) -> bool {
+    s.ends_with(".yaml") || s.ends_with(".yml")
 }
 
 fn is_yaml(entry: &DirEntry) -> bool {
     entry
         .file_name()
         .to_str()
-        .map(|s| s.ends_with(".yaml") || s.ends_with(".yml"))
+        .map(has_yaml_extension)
         .unwrap_or(false)
 }
 
@@ -225,7 +244,7 @@ pub fn get_all() -> Result<Vec<ProjectConfiguration>, String> {
         if !is_yaml(&entry) {
             continue;
         }
-        match parse_project_file_from_path(entry.path()) {
+        match parse_project_file_from_path(entry.path(), None) {
             Ok(p) => projects.push(p),
             Err(e) => return Err(e),
         }
@@ -234,9 +253,13 @@ pub fn get_all() -> Result<Vec<ProjectConfiguration>, String> {
     Ok(projects)
 }
 
-pub fn get(name: &String) -> Result<ProjectConfiguration, String> {
+pub fn get(name: &str) -> Result<ProjectConfiguration, String> {
+    let name_path = Path::new(name);
+    if name_path.exists() && has_yaml_extension(name) {
+        return parse_project_file_from_path(name_path, None);
+    }
     let projects_path = get_projects_path();
     let mut path_buf = Path::new(&projects_path).join(name);
     path_buf.set_extension("yaml");
-    parse_project_file_from_path(path_buf.as_path())
+    parse_project_file_from_path(path_buf.as_path(), None)
 }
