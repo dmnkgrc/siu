@@ -1,6 +1,7 @@
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Confirm;
 use owo_colors::OwoColorize;
+use url::Url;
 
 use std::process::exit;
 use std::{env, fs, path::Path};
@@ -82,8 +83,8 @@ pub struct YamlConfiguration {
 pub struct ProjectConfiguration {
     pub options: YamlConfiguration,
     // Actual path in the system
-    pub path: String,
-    url: Option<String>,
+    pub path: Option<String>,
+    pub url: Option<String>,
 }
 
 impl ProjectConfiguration {
@@ -134,7 +135,14 @@ impl ProjectConfiguration {
         match db.get_project(&self.options.name) {
             Some(project) => (project.clone(), db.get_project_progress(&project)),
             None => {
-                let project = db.create_project(&self.options.name, &self.path);
+                let path = if let Some(p) = &self.path {
+                    p
+                } else if let Some(u) = &self.url {
+                    u
+                } else {
+                    panic!("Projects must have either a path or a url");
+                };
+                let project = db.create_project(&self.options.name, &path);
                 (project.clone(), db.get_project_progress(&project))
             }
         }
@@ -196,24 +204,31 @@ pub fn init() {
 fn parse_project_file(
     project_file: &fs::File,
     file_path: &Path,
-    url: Option<String>,
 ) -> Result<ProjectConfiguration, String> {
     match serde_yaml::from_reader(project_file) {
         Ok(options) => Ok(ProjectConfiguration {
             options,
-            path: file_path.to_str().unwrap().to_string(),
-            url,
+            path: Some(file_path.to_str().unwrap().to_string()),
+            url: None,
         }),
         Err(e) => Err(format!("Failed to parse project file: {}", e)),
     }
 }
 
-fn parse_project_file_from_path(
-    path: &Path,
-    url: Option<String>,
-) -> Result<ProjectConfiguration, String> {
+fn parse_project_text(project: &str, url: &str) -> Result<ProjectConfiguration, String> {
+    match serde_yaml::from_str(project) {
+        Ok(options) => Ok(ProjectConfiguration {
+            options,
+            path: None,
+            url: Some(url.to_string()),
+        }),
+        Err(e) => Err(format!("Failed to parse project file: {}", e)),
+    }
+}
+
+fn parse_project_file_from_path(path: &Path) -> Result<ProjectConfiguration, String> {
     match fs::File::open(path) {
-        Ok(file) => parse_project_file(&file, path, url),
+        Ok(file) => parse_project_file(&file, path),
         Err(e) => Err(format!("Failed to open project file: {}", e)),
     }
 }
@@ -244,7 +259,7 @@ pub fn get_all() -> Result<Vec<ProjectConfiguration>, String> {
         if !is_yaml(&entry) {
             continue;
         }
-        match parse_project_file_from_path(entry.path(), None) {
+        match parse_project_file_from_path(entry.path()) {
             Ok(p) => projects.push(p),
             Err(e) => return Err(e),
         }
@@ -253,13 +268,25 @@ pub fn get_all() -> Result<Vec<ProjectConfiguration>, String> {
     Ok(projects)
 }
 
-pub fn get(name: &str) -> Result<ProjectConfiguration, String> {
+#[tokio::main]
+pub async fn get(name: &str) -> Result<ProjectConfiguration, String> {
+    if let Ok(_) = Url::parse(name) {
+        println!(
+            "{}",
+            "Project URL detected, fetching project from url...".bold()
+        );
+        let res = reqwest::get(name)
+            .await
+            .expect("Failed to fetch project from url");
+        let body = res.text().await.expect("Failed to read project response");
+        return parse_project_text(&body, name);
+    }
     let name_path = Path::new(name);
     if name_path.exists() && has_yaml_extension(name) {
-        return parse_project_file_from_path(name_path, None);
+        return parse_project_file_from_path(name_path);
     }
     let projects_path = get_projects_path();
     let mut path_buf = Path::new(&projects_path).join(name);
     path_buf.set_extension("yaml");
-    parse_project_file_from_path(path_buf.as_path(), None)
+    parse_project_file_from_path(path_buf.as_path())
 }
