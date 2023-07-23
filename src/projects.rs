@@ -142,7 +142,7 @@ impl ProjectConfiguration {
                 } else {
                     panic!("Projects must have either a path or a url");
                 };
-                let project = db.create_project(&self.options.name, &path);
+                let project = db.create_project(&self.options.name, path);
                 (project.clone(), db.get_project_progress(&project))
             }
         }
@@ -270,7 +270,7 @@ pub fn get_all() -> Result<Vec<ProjectConfiguration>, String> {
 
 #[tokio::main]
 pub async fn get(name: &str) -> Result<ProjectConfiguration, String> {
-    if let Ok(_) = Url::parse(name) {
+    if Url::parse(name).is_ok() {
         println!(
             "{}",
             "Project URL detected, fetching project from url...".bold()
