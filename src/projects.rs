@@ -182,9 +182,9 @@ impl ProjectConfiguration {
 
 fn get_projects_path() -> String {
     match home::home_dir() {
-        Some(path) => env::var("SMU_PROJECTS_PATH")
-            .unwrap_or_else(|_| path.to_string_lossy().to_string() + "/.smu/projects"),
-        None => panic!("Home directory not found, please set the SMU_PROJECTS_PATH env variable"),
+        Some(path) => env::var("SIU_PROJECTS_PATH")
+            .unwrap_or_else(|_| path.to_string_lossy().to_string() + "/.siu/projects"),
+        None => panic!("Home directory not found, please set the SIU_PROJECTS_PATH env variable"),
     }
 }
 

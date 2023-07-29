@@ -1,5 +1,22 @@
-# Set Me Up
+# siu
 
-A CLI tool to set up your Mac with one command.
+A CLI tool to help you set up your Mac with one command.
 
-Checkout the [documentation](https://smu.dmnkgrc.com/docs/intro)
+## Prerequisites
+
+- You need to have [homebrew](https://brew.sh/) installed.
+
+## Installation
+
+Run:
+
+```sh
+brew install dmnkgrc/siu/siu
+```
+
+Or
+
+```sh
+brew tap dmnkgrc/siu
+brew install siu
+```

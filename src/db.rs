@@ -11,7 +11,7 @@ pub struct Db {
 impl Db {
     pub fn new() -> Self {
         let home = env::var("HOME").unwrap();
-        let database_url = format!("{}/.cache/smu.sqlite", home);
+        let database_url = format!("{}/.cache/siu.sqlite", home);
 
         let conn = SqliteConnection::establish(&database_url)
             .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
