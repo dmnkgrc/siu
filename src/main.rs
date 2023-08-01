@@ -20,6 +20,8 @@ struct Cli {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
+    let mut db = db::Db::default();
+    db.run_migrations();
     projects::init();
     let cli = Cli::parse();
     let project = projects::get(&cli.project).unwrap();

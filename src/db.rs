@@ -19,6 +19,16 @@ impl Db {
         Self { conn }
     }
 
+    pub fn run_migrations(&mut self) {
+        use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+
+        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
+
+        self.conn
+            .run_pending_migrations(MIGRATIONS)
+            .expect("Failed to run migrations");
+    }
+
     pub fn get_project(&mut self, project_name: &str) -> Option<Project> {
         use crate::schema::projects::dsl::*;
         projects
