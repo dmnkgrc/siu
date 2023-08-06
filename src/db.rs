@@ -1,4 +1,5 @@
-use std::env;
+use std::fs;
+use std::{env, path::Path};
 
 use diesel::prelude::*;
 
@@ -11,7 +12,17 @@ pub struct Db {
 impl Db {
     pub fn new() -> Self {
         let home = env::var("HOME").unwrap();
-        let database_url = format!("{}/.cache/siu.sqlite", home);
+        let cache_path = format!("{}/.cache", home);
+        let cache_path_exists = Path::new(&cache_path).is_dir();
+        if !cache_path_exists {
+            match fs::create_dir_all(&cache_path) {
+                Ok(_) => {}
+                Err(e) => {
+                    panic!("Failed to create .cache dir: {}", e);
+                }
+            }
+        }
+        let database_url = format!("{}/siu.sqlite", &cache_path);
 
         let conn = SqliteConnection::establish(&database_url)
             .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
